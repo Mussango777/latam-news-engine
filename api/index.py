@@ -1,5 +1,6 @@
 import feedparser
 from flask import Flask, jsonify
+import re
 
 app = Flask(__name__)
 
@@ -17,35 +18,41 @@ RSS_FEEDS = [
     "https://cnnespanol.cnn.com/category/latinoamerica/feed/"
 ]
 
+def extract_image(entry):
+    # 1. Ищем в стандартных тегах
+    if 'media_content' in entry:
+        return entry.media_content[0]['url']
+    if 'links' in entry:
+        for link in entry.links:
+            if 'image' in link.get('type', ''):
+                return link.get('href')
+    
+    # 2. Ищем внутри HTML описания (как на скриншоте Render37)
+    description = entry.get('summary', entry.get('description', ''))
+    img_match = re.search(r'<img [^>]*src="([^"]+)"', description)
+    if img_match:
+        return img_match.group(1)
+    
+    return None
+
 @app.route('/')
 def get_news():
     results = []
     seen = set()
-    
     for url in RSS_FEEDS:
         try:
             feed = feedparser.parse(url)
             for entry in feed.entries[:5]:
                 title = entry.title.strip()
                 if title not in seen:
-                    # Поиск картинки в разных форматах RSS
-                    img_url = None
-                    if 'media_content' in entry:
-                        img_url = entry.media_content[0]['url']
-                    elif 'links' in entry:
-                        for link in entry.links:
-                            if 'image' in link.get('type', ''):
-                                img_url = link.get('href')
-                    
                     results.append({
                         'title': title,
                         'link': entry.link,
-                        'description': entry.get('summary', entry.get('description', '')[:300]),
-                        'image': img_url,
+                        'description': entry.get('summary', entry.get('description', '')[:500]),
+                        'image': extract_image(entry),
                         'source': url.split('/')[2]
                     })
                     seen.add(title)
         except:
             continue
-            
     return jsonify(results)
