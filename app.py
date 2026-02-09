@@ -3,23 +3,29 @@ from flask import Flask, jsonify
 
 app = Flask(__name__)
 
-RSS_FEEDS = [
-    "https://www.efe.com/efe/america/9/rss",
-    "http://feeds.reuters.com/reuters/latinAmericaNews",
-    "https://en.mercopress.com/rss/latin-america",
-    "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/america/portada",
-    "https://rss.dw.com/rdf/rss-sp-top",
-    "https://es.panampost.com/feed/",
-    "https://insightcrime.org/feed/",
-    "https://latinamericareports.com/feed",
-    "https://news.google.com/rss/search?q=when:24h+site:apnews.com+Latin+America&hl=en-US&gl=US&ceid=US:en"
-]
+# ГЛАВНАЯ СТРАНИЦА (чтобы не было Not Found)
+@app.route('/')
+def home():
+    return "<h1>Бот работает!</h1><p>Иди на <a href='/get_news'>/get_news</a> чтобы увидеть новости.</p>"
 
+# СТРАНИЦА С НОВОСТЯМИ
 @app.route('/get_news')
 def get_news():
     seen_titles = set()
     combined_news = []
     
+    # Твои источники
+    RSS_FEEDS = [
+        "https://www.efe.com/efe/america/9/rss",
+        "http://feeds.reuters.com/reuters/latinAmericaNews",
+        "https://en.mercopress.com/rss/latin-america",
+        "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/america/portada",
+        "https://rss.dw.com/rdf/rss-sp-top",
+        "https://es.panampost.com/feed/",
+        "https://insightcrime.org/feed/",
+        "https://latinamericareports.com/feed"
+    ]
+
     for url in RSS_FEEDS:
         try:
             feed = feedparser.parse(url)
@@ -38,5 +44,6 @@ def get_news():
             
     return jsonify(combined_news)
 
+# Это нужно только для запуска на твоем компе, Render это проигнорирует
 if __name__ == '__main__':
     app.run()
