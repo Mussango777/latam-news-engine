@@ -3,18 +3,17 @@ from flask import Flask, jsonify
 
 app = Flask(__name__)
 
-# ГЛАВНАЯ СТРАНИЦА (чтобы не было Not Found)
+# Маршрут для главной (теперь он точно работает, судя по логам)
 @app.route('/')
 def home():
-    return "<h1>Бот работает!</h1><p>Иди на <a href='/get_news'>/get_news</a> чтобы увидеть новости.</p>"
+    return "<h1>Бот работает!</h1><p>Иди на <a href='/get_news'>/get_news</a></p>"
 
-# СТРАНИЦА С НОВОСТЯМИ
-@app.route('/get_news')
+# Маршрут для новостей (добавили strict_slashes=False, чтобы работал и со слэшем, и без)
+@app.route('/get_news', strict_slashes=False)
 def get_news():
     seen_titles = set()
     combined_news = []
     
-    # Твои источники
     RSS_FEEDS = [
         "https://www.efe.com/efe/america/9/rss",
         "http://feeds.reuters.com/reuters/latinAmericaNews",
@@ -44,6 +43,5 @@ def get_news():
             
     return jsonify(combined_news)
 
-# Это нужно только для запуска на твоем компе, Render это проигнорирует
 if __name__ == '__main__':
     app.run()
