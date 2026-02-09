@@ -3,7 +3,7 @@ from flask import Flask, jsonify
 
 app = Flask(__name__)
 
-# Список твоих источников
+# Полный список из 12 топовых источников по твоему ТЗ
 RSS_FEEDS = [
     "https://www.efe.com/efe/america/9/rss",
     "http://feeds.reuters.com/reuters/latinAmericaNews",
@@ -12,15 +12,14 @@ RSS_FEEDS = [
     "https://rss.dw.com/rdf/rss-sp-top",
     "https://es.panampost.com/feed/",
     "https://insightcrime.org/feed/",
-    "https://latinamericareports.com/feed"
+    "https://latinamericareports.com/feed",
+    "https://www.bbc.com/mundo/index.xml",
+    "https://www.france24.com/es/america-latina/rss",
+    "https://cnnespanol.cnn.com/category/latinoamerica/feed/",
+    "https://www.aljazeera.com/xml/rss/all.xml"
 ]
 
 @app.route('/')
-def home():
-    return "<h1>Vercel работает!</h1><p>Новости тут: <a href='/news'>/news</a></p>"
-
-@app.route('/news')
-@app.route('/get_news')
 def get_news():
     results = []
     seen = set()
@@ -28,14 +27,14 @@ def get_news():
     for url in RSS_FEEDS:
         try:
             feed = feedparser.parse(url)
-            # Берем по 5 свежих новостей
+            # Берем по 5 свежих новостей из каждого источника
             for entry in feed.entries[:5]:
                 title = entry.title.strip()
                 if title not in seen:
                     results.append({
                         'title': title,
                         'link': entry.link,
-                        'description': entry.get('summary', entry.get('description', '')[:200]),
+                        'description': entry.get('summary', entry.get('description', '')[:300]),
                         'source': url.split('/')[2]
                     })
                     seen.add(title)
@@ -43,6 +42,3 @@ def get_news():
             continue
             
     return jsonify(results)
-
-# Для Vercel важно, чтобы переменная называлась app
-# Блок if __name__ == "__main__" здесь не обязателен, но и не мешает
