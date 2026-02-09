@@ -4,6 +4,7 @@ import re
 
 app = Flask(__name__)
 
+# Список источников новостей Латинской Америки
 RSS_FEEDS = [
     "https://www.efe.com/efe/america/9/rss",
     "http://feeds.reuters.com/reuters/latinAmericaNews",
@@ -19,7 +20,8 @@ RSS_FEEDS = [
 ]
 
 def extract_image(entry):
-    # 1. Ищем в стандартных тегах
+    """Функция для поиска ссылки на изображение в данных новости."""
+    # 1. Ищем в стандартных тегах (media:content или enclosure)
     if 'media_content' in entry:
         return entry.media_content[0]['url']
     if 'links' in entry:
@@ -27,7 +29,7 @@ def extract_image(entry):
             if 'image' in link.get('type', ''):
                 return link.get('href')
     
-    # 2. Ищем внутри HTML описания (как на скриншоте Render37)
+    # 2. Поиск картинки внутри HTML-описания (тег <img>)
     description = entry.get('summary', entry.get('description', ''))
     img_match = re.search(r'<img [^>]*src="([^"]+)"', description)
     if img_match:
@@ -39,6 +41,7 @@ def extract_image(entry):
 def get_news():
     results = []
     seen = set()
+    
     for url in RSS_FEEDS:
         try:
             feed = feedparser.parse(url)
@@ -50,9 +53,11 @@ def get_news():
                         'link': entry.link,
                         'description': entry.get('summary', entry.get('description', '')[:500]),
                         'image': extract_image(entry),
-                        'source': url.split('/')[2]
+                        'source': url.split('/')[2],
+                        'debug': 'v2' # Поле для проверки деплоя
                     })
                     seen.add(title)
         except:
             continue
+            
     return jsonify(results)
