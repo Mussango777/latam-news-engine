@@ -13,10 +13,9 @@ RSS_FEEDS = [
     "https://es.panampost.com/feed/",
     "https://insightcrime.org/feed/",
     "https://latinamericareports.com/feed",
-    "https://www.bbc.com/mundo/index.xml",
+    "https://www.bbc.com/mundo/topics/cl0905v04eet/index.xml", # Специально LatAm
     "https://www.france24.com/es/america-latina/rss",
-    "https://cnnespanol.cnn.com/category/latinoamerica/feed/",
-    "https://www.aljazeera.com/xml/rss/all.xml"
+    "https://cnnespanol.cnn.com/category/latinoamerica/feed/"
 ]
 
 @app.route('/')
