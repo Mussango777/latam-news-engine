@@ -1,7 +1,6 @@
 import feedparser
 from flask import Flask, jsonify
 import re
-from datetime import datetime
 
 app = Flask(__name__)
 
@@ -16,33 +15,25 @@ RSS_FEEDS = [
 
 def upgrade_image_quality(url):
     if not url: return None
-    url = re.sub(r'/\d+x\d+/', '/', url) # Убираем /100x80/
-    quality_filters = ["-80x80", "_thumb", "_small", "-100x100"]
-    for f in quality_filters:
+    # Чистим ссылку от "мыла" и скобок (защита от ошибки Render 46)
+    url = re.sub(r'/\d+x\d+/', '/', url)
+    filters = ["-80x80", "_thumb", "_small", "-100x100"]
+    for f in filters:
         url = url.replace(f, "")
-    return url.strip("() ") # Очистка от скобок (защита от ошибки Render 46)
-
-def get_rotating_feeds():
-    # Группируем по 4 источника. Каждые 4 часа меняем группу.
-    hour = datetime.utcnow().hour
-    batch_index = (hour // 4) % 3 # 0, 1 или 2
-    start = batch_index * 4
-    end = start + 4
-    return RSS_FEEDS[start:end]
+    return url.strip("() ")
 
 @app.route('/')
 def get_news():
     results = []
     seen = set()
-    active_feeds = get_rotating_feeds()
-    
-    for url in active_feeds:
+    # В ТЕСТОВОМ РЕЖИМЕ: проверяем все источники сразу
+    for url in RSS_FEEDS:
         try:
             feed = feedparser.parse(url)
-            for entry in feed.entries[:2]: # Берем по 2 новости для макс. экономии
+            if feed.entries:
+                entry = feed.entries[0] # Берем только 1 самую свежую новость
                 title = entry.title.strip()
                 if title not in seen:
-                    # Ищем картинку в разных тегах
                     img = None
                     if 'media_content' in entry: img = entry.media_content[0]['url']
                     elif 'description' in entry:
